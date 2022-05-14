@@ -20,7 +20,7 @@ class User_modeling(nn.Module):
         self.user_attention_layer2 = nn.Linear(self.config['model']['layer_dim'], 1)
         self.relu = nn.ReLU(inplace=True)
         self.softmax = nn.Softmax(dim = 0)
-        self.capsule_layer = CapsuleLayer(news_embedding_dim, 1, 
+        self.capsule_layer = CapsuleLayer(news_embedding_dim, 20, 
                     4, news_embedding_dim, 20)
 
     def get_user_history(self, user_id):
@@ -30,14 +30,12 @@ class User_modeling(nn.Module):
         return user_history
 
     def user_attention_modeling(self, news_embeddings):
-        print("news_embeddings:", news_embeddings.shape)
         user_attention = self.relu(self.user_attention_layer1(news_embeddings))
         user_attention = self.relu(self.user_attention_layer2(user_attention))
         user_attention_softmax = self.softmax(user_attention)
         news_attention_embedding = news_embeddings * user_attention_softmax
         user_attention_embedding = torch.sum(news_attention_embedding, dim=1)
 
-        print("user_attention_embedding:", user_attention_embedding.shape)
         return user_attention_embedding
 
     def multi_interest_user_attention_modeling(self, news_embeddings):
@@ -53,9 +51,12 @@ class User_modeling(nn.Module):
 
 
     def forward(self, user_id):
-
         user_history = self.get_user_history(user_id)
         user_history_embedding, top_indexs = self.news_embedding(user_history)
-        user_attention_modeling = self.multi_interest_user_attention_modeling(user_history_embedding)
+        print(self.config['model_type'])
+        if self.config['model_type'] == "multi":
+            user_attention_modeling = self.multi_interest_user_attention_modeling(user_history_embedding)
+        else:
+            user_attention_modeling = self.user_attention_modeling(user_history_embedding)
         user_embedding = user_attention_modeling
         return user_embedding

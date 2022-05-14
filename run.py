@@ -44,22 +44,20 @@ parser.add_argument('-c', '--config', default="./config.json", type=str,
                     help='config file path (default: None)')
 parser.add_argument('-r', '--resume', default=None, type=str,
                     help='path to latest checkpoint (default: None)')
-parser.add_argument('-d', '--device', default=None, type=str,
+parser.add_argument('-d', '--device', default="0", type=str,
                     help='indices of GPUs to enable (default: all)')
 
+args = parser.parse_args()
 config = ConfigParser.from_args(parser)
-
-
 epochs = 20
 batch_size = 64
 train_type = "single_task"
 task = "user2item" # task should be within: user2item, item2item, vert_classify, pop_predict
-
 config['trainer']['epochs'] = epochs
 config['data_loader']['batch_size'] = batch_size
 config['trainer']['training_type'] = train_type
 config['trainer']['task'] = task
-
+print(config["model_type"])
 data = load_data_mind(config)
 
 if train_type == "single_task":

@@ -1,5 +1,5 @@
 name: "KRED"
-model_type: "att"
+model_type: "multi"
 n_gpu: 1
 data_loader:
     batch_size: 64

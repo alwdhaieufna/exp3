@@ -27,7 +27,7 @@ class CapsuleLayer(nn.Module):
         self.num_routing = num_routing
         self.device = "cuda"
         self.W = nn.Parameter(0.01 * torch.randn(1, out_caps, in_caps, out_dim, in_dim),
-                              requires_grad=True)
+                              requires_grad=True).to(self.device)
 
     def forward(self, x):
         batch_size = x.size(0)
@@ -75,11 +75,3 @@ def squash(x, dim=-1):
     return scale * x / (squared_norm.sqrt() + 1e-8)
 
 
-
-def main():
-    cp = CapsuleLayer(10, 1, 4, 5, 10)
-    i =  torch.rand(4, 1, 10)
-
-    cp(i)
-
-main()
