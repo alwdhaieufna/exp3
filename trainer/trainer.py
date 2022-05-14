@@ -7,7 +7,7 @@ from utils.pytorchtools import *
 from utils.util import *
 from base.base_trainer import BaseTrainer
 from logger.logger import *
-
+from sklearn import metrics
 
 
 class Trainer(BaseTrainer):
@@ -70,7 +70,9 @@ class Trainer(BaseTrainer):
         self.model.eval()
         y_pred = []
         start_list = list(range(0, len(self.test_data['label']), int(self.config['data_loader']['batch_size'])))
-        for start in start_list:
+        print("start_list len:", len(start_list))
+        for start in start_list[:100]:
+            print("start:", start)
             if start + int(self.config['data_loader']['batch_size']) <= len(self.test_data['label']):
                 end = start + int(self.config['data_loader']['batch_size'])
             else:
@@ -79,8 +81,27 @@ class Trainer(BaseTrainer):
                 0].cpu().data.numpy()
 
             y_pred.extend(out)
-        truth = self.test_data['label']
-        auc_score = cal_auc(y_pred, truth)
+        truth = self.test_data['label'][:len(y_pred)]
+#        print("y_pred:", y_pred)
+#        print("truth:", truth)
+        nom=0
+        denom=0
+        for item_1, item_2 in zip(y_pred, truth):
+            if item_1 <= 0.5 and item_2 == 0 or item_1 > 0.5 and item_2 == 1:
+                nom += 1
+            else:
+                denom += 1
+        acc_score = float(nom)/denom
+        print("y_pred:", y_pred[:100])
+        print("truth:", truth[:100])
+                
+        y_pred = np.array([item + 1 for item in y_pred])
+        truth = np.array(truth)
+        fpr, tpr, thresholds = metrics.roc_curve(truth, y_pred, pos_label=2)
+        auc_score = metrics.auc(fpr, tpr)
+
+#        auc_score = cal_auc(y_pred, truth)
+        print("acc socre: " + str(acc_score))
         print("auc socre: " + str(auc_score))
         return auc_score
 

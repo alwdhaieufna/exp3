@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
-from News_embedding import News_embedding
-
+from model.News_embedding import News_embedding
+from model.core import CapsuleLayer
 
 class User_modeling(nn.Module):
 
@@ -20,7 +20,8 @@ class User_modeling(nn.Module):
         self.user_attention_layer2 = nn.Linear(self.config['model']['layer_dim'], 1)
         self.relu = nn.ReLU(inplace=True)
         self.softmax = nn.Softmax(dim = 0)
-
+        self.capsule_layer = CapsuleLayer(news_embedding_dim, 1, 
+                    4, news_embedding_dim, 20)
 
     def get_user_history(self, user_id):
         user_history = []
@@ -29,17 +30,32 @@ class User_modeling(nn.Module):
         return user_history
 
     def user_attention_modeling(self, news_embeddings):
+        print("news_embeddings:", news_embeddings.shape)
         user_attention = self.relu(self.user_attention_layer1(news_embeddings))
         user_attention = self.relu(self.user_attention_layer2(user_attention))
         user_attention_softmax = self.softmax(user_attention)
         news_attention_embedding = news_embeddings * user_attention_softmax
         user_attention_embedding = torch.sum(news_attention_embedding, dim=1)
+
+        print("user_attention_embedding:", user_attention_embedding.shape)
         return user_attention_embedding
+
+    def multi_interest_user_attention_modeling(self, news_embeddings):
+        capsule_output = self.capsule_layer(news_embeddings)
+        user_attention = self.relu(self.user_attention_layer1(news_embeddings))
+        user_attention = self.relu(self.user_attention_layer2(user_attention))
+        user_attention_softmax = self.softmax(user_attention)
+        news_attention_embedding = news_embeddings * user_attention_softmax
+        user_attention_embedding = torch.sum(news_attention_embedding, dim=1)
+        multi_emb = torch.sum(capsule_output, dim=1)
+        final_emb = torch.sum([user_attention_embedding, multi_emb], dim=1)
+        return final_emb
+
 
     def forward(self, user_id):
 
         user_history = self.get_user_history(user_id)
         user_history_embedding, top_indexs = self.news_embedding(user_history)
-        user_attention_modeling = self.user_attention_modeling(user_history_embedding)
+        user_attention_modeling = self.multi_interest_user_attention_modeling(user_history_embedding)
         user_embedding = user_attention_modeling
         return user_embedding
