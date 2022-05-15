@@ -45,15 +45,15 @@ class User_modeling(nn.Module):
         user_attention_softmax = self.softmax(user_attention)
         news_attention_embedding = news_embeddings * user_attention_softmax
         user_attention_embedding = torch.sum(news_attention_embedding, dim=1)
-        multi_emb = torch.sum(capsule_output, dim=1)
-        final_emb = torch.sum([user_attention_embedding, multi_emb], dim=1)
+        multi_emb = capsule_output.view(capsule_output.shape[0], -1)
+
+        final_emb = torch.cat([user_attention_embedding, multi_emb], 1)
         return final_emb
 
 
     def forward(self, user_id):
         user_history = self.get_user_history(user_id)
         user_history_embedding, top_indexs = self.news_embedding(user_history)
-        print(self.config['model_type'])
         if self.config['model_type'] == "multi":
             user_attention_modeling = self.multi_interest_user_attention_modeling(user_history_embedding)
         else:

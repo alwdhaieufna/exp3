@@ -49,7 +49,7 @@ parser.add_argument('-d', '--device', default="0", type=str,
 
 args = parser.parse_args()
 config = ConfigParser.from_args(parser)
-epochs = 20
+epochs = 5
 batch_size = 64
 train_type = "single_task"
 task = "user2item" # task should be within: user2item, item2item, vert_classify, pop_predict

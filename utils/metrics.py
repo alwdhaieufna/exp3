@@ -1,4 +1,5 @@
 from collections import defaultdict
+from sklearn import metrics
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import f1_score

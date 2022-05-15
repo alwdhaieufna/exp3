@@ -92,16 +92,16 @@ class Trainer(BaseTrainer):
             else:
                 denom += 1
         acc_score = float(nom)/denom
-        print("y_pred:", y_pred[:100])
-        print("truth:", truth[:100])
+#        print("y_pred:", y_pred[:100])
+#        print("truth:", truth[:100])
                 
-        y_pred = np.array([item + 1 for item in y_pred])
+        y_pred = np.array([item for item in y_pred])
         truth = np.array(truth)
-        fpr, tpr, thresholds = metrics.roc_curve(truth, y_pred, pos_label=2)
+        fpr, tpr, thresholds = metrics.roc_curve(truth, y_pred, pos_label=1)
         auc_score = metrics.auc(fpr, tpr)
 
 #        auc_score = cal_auc(y_pred, truth)
-        print("acc socre: " + str(acc_score))
+
         print("auc socre: " + str(auc_score))
         return auc_score
 

@@ -37,7 +37,8 @@ class KREDModel(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(dim=-1)
-        self.mlp_layer1 = nn.Linear(2* self.config['model']['embedding_dim'],  self.config['model']['layer_dim'])
+        self.mlp_layer1 = nn.Linear(2 * self.config['model']['embedding_dim'],  self.config['model']['layer_dim'])
+        self.mlp_layer_m = nn.Linear(6 * self.config['model']['embedding_dim'],  self.config['model']['layer_dim'])
         self.mlp_layer2 = nn.Linear(self.config['model']['layer_dim'], 1)
         self.cos = torch.nn.CosineSimilarity(dim=-1)
 
@@ -68,11 +69,14 @@ class KREDModel(nn.Module):
                                                        user_embedding.shape[2])
 
         u_n_embedding = torch.cat([user_embedding, candidate_news_embedding], dim=(len(user_embedding.shape) - 1))
-        feature_embedding = self.relu(self.mlp_layer1(u_n_embedding))
+        if self.config['model_type'] == 'multi':
+            feature_embedding = self.relu(self.mlp_layer_m(u_n_embedding))
+        else:
+            feature_embedding = self.relu(self.mlp_layer1(u_n_embedding))
         predict = self.sigmoid(self.mlp_layer2(feature_embedding))
         predict_vert = self.softmax(self.vert_mlp_layer2(self.relu(self.vert_mlp_layer1(candidate_news_embedding))))
         predict_local = self.sigmoid(self.local_mlp_layer2(self.relu(self.local_mlp_layer1(candidate_news_embedding))))
         predict_pop = self.softmax(self.pop_mlp_layer2(self.relu(self.pop_mlp_layer1(candidate_news_embedding))))
-        predict_i2i = self.cos(user_embedding, candidate_news_embedding)
+#        predict_i2i = self.cos(user_embedding, candidate_news_embedding)
 
-        return predict.squeeze(), predict_vert.squeeze(), predict_local.squeeze(), predict_pop.squeeze(), predict_i2i.squeeze(), candidate_news_embedding, topk_index
+        return predict.squeeze(), predict_vert.squeeze(), predict_local.squeeze(), predict_pop.squeeze(), predict_pop.squeeze(), candidate_news_embedding, topk_index

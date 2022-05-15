@@ -181,16 +181,22 @@ def testing(test_data, config):
     model.eval()
     y_pred = []
     start_list = list(range(0, len(test_data['label']), config['data_loader']['batch_size']))
-    for start in start_list:
+    for start in start_list[:100]:
         if start + config['data_loader']['batch_size'] <= len(test_data['label']):
             end = start + config['data_loader']['batch_size']
         else:
             end = len(test_data['label'])
-        out = model(test_data['user_id'][start:end], test_data['news_id'][start:end], config['data_loader']['batch_size'])[
+        out = model(test_data['item1'][start:end], test_data['item2'][start:end], config['data_loader']['batch_size'])[
             task_index].cpu().data.numpy()
 
         y_pred.extend(out)
     truth = test_data['label']
+    y_pred = np.array([item for item in y_pred])
+    truth = np.array(truth)
+    fpr, tpr, thresholds = metrics.roc_curve(truth, y_pred, pos_label=1)
+    auc_score = metrics.auc(fpr, tpr)
+    print("test auc socre: " + str(auc_score))
+
     score = evaluate(y_pred, truth, test_data, config['trainer']['task'])
 
 
